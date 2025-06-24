@@ -1,0 +1,47 @@
+{
+  "os": "Linux-6.14.0-22-generic-x86_64-with-glibc2.41",
+  "python": "CPython 3.10.18",
+  "startedAt": "2025-06-23T09:14:29.918676Z",
+  "args": [
+    "--app",
+    ".",
+    "--num-supernodes",
+    "3"
+  ],
+  "program": "/home/blaaz/miniconda3/envs/flowerPrj/bin/flower-simulation",
+  "git": {
+    "remote": "https://github.com/wonmaster/FLower-yalah.git",
+    "commit": "280860c36117e7606236b71851987e2a5adc958e"
+  },
+  "email": "mahfoud.merzoug@protonmail.com",
+  "root": "/home/blaaz/Documents/FLower yalah/flower-proj-tensor",
+  "host": "blaaz-pc",
+  "executable": "/home/blaaz/miniconda3/envs/flowerPrj/bin/python3.10",
+  "cpu_count": 8,
+  "cpu_count_logical": 16,
+  "gpu": "NVIDIA GeForce RTX 2060 with Max-Q Design",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "122805821440",
+      "used": "51506708480"
+    }
+  },
+  "memory": {
+    "total": "15613255680"
+  },
+  "cpu": {
+    "count": 8,
+    "countLogical": 16
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA GeForce RTX 2060 with Max-Q Design",
+      "memoryTotal": "6442450944",
+      "cudaCores": 1920,
+      "architecture": "Turing",
+      "uuid": "GPU-ecc5f64e-f525-ed6c-1820-430296836104"
+    }
+  ],
+  "cudaVersion": "12.8"
+}

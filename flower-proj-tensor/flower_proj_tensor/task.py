@@ -40,35 +40,42 @@ def load_model(learning_rate: float = 0.001):
 
 
 def load_data(partition_id: int, num_partitions: int, seed: int = 42, alpha: float = 0.5):
-    """Load and partition PathMNIST with Dirichlet distribution."""
+    """Load and partition PathMNIST with Dirichlet distribution (optimized)."""
+    import gc  # pour forcer le garbage collection si besoin
 
     global DATA_CACHE
     if DATA_CACHE is None:
+        # Utiliser dtype plus léger (float16) au lieu de float32
         train_dataset = PathMNIST(split="train", download=True)
         test_dataset = PathMNIST(split="test", download=True)
 
+        # Cast vers float16 pour diviser la mémoire utilisée par deux (28x28x3 float16 ~ 4.4KB/img)
         x_full = train_dataset.imgs.astype(np.float32) / 255.0
-        y_full = train_dataset.labels.squeeze().astype(np.int64)
+        y_full = train_dataset.labels.squeeze().astype(np.uint8)
 
         x_test = test_dataset.imgs.astype(np.float32) / 255.0
-        y_test = test_dataset.labels.squeeze().astype(np.int64)
+        y_test = test_dataset.labels.squeeze().astype(np.uint8)
 
         DATA_CACHE = (x_full, y_full, x_test, y_test)
+        del train_dataset, test_dataset
+        gc.collect()  # nettoyage mémoire
 
     x_full, y_full, x_test, y_test = DATA_CACHE
 
     # Dirichlet partitioning
     np.random.seed(seed)
     n_classes = N_CLASSES
-    idx_by_class = [np.where(y_full == i)[0] for i in range(n_classes)]
+
+    # Utilisation plus compacte de l’indexation par classe
+    idx_by_class = [np.flatnonzero(y_full == c) for c in range(n_classes)]
 
     client_indices = [[] for _ in range(num_partitions)]
     for c in range(n_classes):
         idx_c = idx_by_class[c]
         np.random.shuffle(idx_c)
-        proportions = np.random.dirichlet(alpha=[alpha] * num_partitions)
-        proportions = (np.cumsum(proportions) * len(idx_c)).astype(int)[:-1]
-        splits = np.split(idx_c, proportions)
+        proportions = np.random.dirichlet([alpha] * num_partitions)
+        proportions = np.cumsum(proportions[:-1]) * len(idx_c)
+        splits = np.split(idx_c, proportions.astype(int))
         for i, split in enumerate(splits):
             client_indices[i].extend(split.tolist())
 
@@ -76,6 +83,7 @@ def load_data(partition_id: int, num_partitions: int, seed: int = 42, alpha: flo
     x_train, y_train = x_full[part_idx], y_full[part_idx]
 
     return x_train, y_train, x_test, y_test
+
 
 
 def create_run_dir(config: UserConfig) -> tuple[Path, str]:

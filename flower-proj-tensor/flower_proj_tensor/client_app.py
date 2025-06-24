@@ -55,7 +55,8 @@ class FlowerClient(NumPyClient):
         return (
             model.get_weights(),
             len(self.x_train),
-            {},
+            { "train_loss": model.history.history["loss"][-1],
+              "train_accuracy": model.history.history["accuracy"][-1]},
         )
 
     def _save_layer_weights_to_state(self, model):

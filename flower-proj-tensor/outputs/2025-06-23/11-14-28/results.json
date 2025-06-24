@@ -1,0 +1,1 @@
+{"federated_evaluate": [{"round": 1, "federated_evaluate_loss": 3.067207932472229, "federated_evaluate_accuracy": 0.08259053155779839}, {"round": 2, "federated_evaluate_loss": 2.8394486904144287, "federated_evaluate_accuracy": 0.08259053155779839}, {"round": 3, "federated_evaluate_loss": 2.9180610179901123, "federated_evaluate_accuracy": 0.11239554360508919}]}

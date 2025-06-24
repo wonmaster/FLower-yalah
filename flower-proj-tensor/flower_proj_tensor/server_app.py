@@ -6,7 +6,7 @@ from flower_proj_tensor.task import load_model
 from medmnist import PathMNIST
 import numpy as np
 from datasets import load_dataset
-from flwr.common import Context, ndarrays_to_parameters
+from flwr.common import Context, ndarrays_to_parameters, Metrics
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 
 
@@ -25,10 +25,14 @@ def gen_evaluate_fn(
 
     return evaluate
 
+def process_fit_metrics(metrics:list[tuple[int,Metrics]]) -> Metrics:
+    for _,m in metrics:
+        print(m)
+    return {}
 
-def on_fit_config(server_round: int):
+def on_fit_config(server_round: int)-> Metrics:
     """Construct `config` that clients receive when running `fit()`"""
-    lr = 0.001
+    lr = 0.002
     # Enable a simple form of learning rate decay
     if server_round > 10:
         lr /= 2
@@ -36,7 +40,22 @@ def on_fit_config(server_round: int):
 
 
 # Define metric aggregation function
-def weighted_average(metrics):
+def weighted_average(metrics:list[tuple[int,Metrics]]) -> Metrics:
+    """_summary_
+    Aggregate metrics from clients using a weighted average.
+
+    Args:
+        metrics : list of tuples
+        Each tuple contains the number of examples used by the client and a dictionary
+        with the metrics computed by the client, e.g. (num_examples, {"accuracy": accuracy}).
+
+    Returns:
+        _type_: 
+        A dictionary with the aggregated metric.
+        The metric is a weighted average of the accuracies of each client,
+        weighted by the number of examples used by each client.
+        The metric is named "federated_evaluate_accuracy".
+    """
     # Multiply accuracy of each client by number of examples used
     accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
     examples = [num_examples for num_examples, _ in metrics]
@@ -46,6 +65,16 @@ def weighted_average(metrics):
 
 
 def server_fn(context: Context):
+    """_summary_
+    Server function that initializes the server components for the Flower app.
+
+    Args:
+        context (Context): Context object containing run configuration and other parameters.
+
+    Returns:
+        _type_: ServerAppComponents
+        The components of the server app, including the strategy and configuration.
+    """
     # Read from config
     num_rounds = context.run_config["num-server-rounds"]
     fraction_fit = context.run_config["fraction-fit"]
@@ -78,6 +107,7 @@ def server_fn(context: Context):
         on_fit_config_fn=on_fit_config,
         evaluate_fn=gen_evaluate_fn(x_test, y_test),
         evaluate_metrics_aggregation_fn=weighted_average,
+        fit_metrics_aggregation_fn=process_fit_metrics,
     )
     config = ServerConfig(num_rounds=num_rounds)
 
